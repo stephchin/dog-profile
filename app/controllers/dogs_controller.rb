@@ -40,12 +40,17 @@ class DogsController < ApplicationController
   # PATCH/PUT /dogs/1.json
   def update
     respond_to do |format|
-      if @dog.update(dog_params)
-        format.html { redirect_to @dog, notice: 'Dog was successfully updated.' }
-        format.json { render :show, status: :ok, location: @dog }
+      if @dog.owner == current_user
+        if @dog.update(dog_params)
+          format.html { redirect_to @dog, notice: 'Dog was successfully updated.' }
+          format.json { render :show, status: :ok, location: @dog }
+        else
+          format.html { render :edit }
+          format.json { render json: @dog.errors, status: :unprocessable_entity }
+        end
       else
         format.html { render :edit }
-        format.json { render json: @dog.errors, status: :unprocessable_entity }
+        format.json { render json: @dog.errors, status: :forbidden }
       end
     end
   end
