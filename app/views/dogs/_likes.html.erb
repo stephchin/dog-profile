@@ -1,0 +1,10 @@
+<p><%= dog.likes.count %> <%= (dog.likes.count) == 1 ? 'Like' : 'Likes'%></p>
+<% if dog.owner != current_user %>
+  <% like = dog.likes.find_by(user: current_user) %>
+  <% if like.blank? %>
+    <%= button_to 'Like', dog_likes_path(dog.id), method: :post %>
+    <br>
+  <% else %>
+    <%= button_to 'Unlike', dog_like_path(dog.id, like.id), method: :delete %>
+  <% end %>
+<% end %>
