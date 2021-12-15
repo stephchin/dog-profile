@@ -76,4 +76,20 @@ class DogsController < ApplicationController
   def dog_params
     params.require(:dog).permit(:name, :description, images: [])
   end
+
+  def sort_by_likes_in_last_hour
+    count_likes = <<~SQL
+      COUNT(
+        CASE WHEN likes.created_at >= (datetime ('now', '-1 Hour')) THEN
+          1
+        ELSE
+          NULL
+        END) likes_in_hour
+    SQL
+
+    @dogs = Dog.left_joins(:likes).
+      select('*', count_likes).
+      group('dogs.id').
+      order('likes_in_hour DESC').page(params[:page]).per(5)
+  end
 end
