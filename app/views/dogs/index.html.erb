@@ -1,3 +1,8 @@
+<% if @sort %>
+  <%= link_to 'Reset Sort', sort: nil%>
+<% else%>
+  <%= link_to 'Sort', sort: true%>
+<% end %>
 <% @dogs.each_with_index do |dog, i| %>
   <%= render partial: 'thumbnail', locals: { dog: dog } %>
   <% if ((i+1)%2).zero? %>

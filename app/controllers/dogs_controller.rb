@@ -4,7 +4,13 @@ class DogsController < ApplicationController
   # GET /dogs
   # GET /dogs.json
   def index
-    @dogs = Dog.all.page(params[:page]).per(5)
+    @sort = page_params[:sort]
+    dog_query = @sort == 'true' ?  sort_by_likes_in_last_hour : Dog.all
+    @dogs = dog_query.page(page_params[:page]).per(5)
+  end
+
+  def page_params
+    params.permit(:page, :sort)
   end
 
   # GET /dogs/1
@@ -78,18 +84,23 @@ class DogsController < ApplicationController
   end
 
   def sort_by_likes_in_last_hour
-    count_likes = <<~SQL
-      COUNT(
-        CASE WHEN likes.created_at >= (datetime ('now', '-1 Hour')) THEN
-          1
-        ELSE
-          NULL
-        END) likes_in_hour
-    SQL
-
-    @dogs = Dog.left_joins(:likes).
-      select('*', count_likes).
-      group('dogs.id').
-      order('likes_in_hour DESC').page(params[:page]).per(5)
+   ids = Dog.find_by_sql(
+     <<~SQL
+       SELECT dogs.id
+       FROM dogs
+         LEFT JOIN likes ON likes.dog_id = dogs.id
+       GROUP BY dogs.id
+       ORDER BY
+         COUNT(
+           CASE
+           WHEN likes.created_at >= (datetime ('now', '-1 Hour')) THEN 1
+           ELSE NULL
+           END)
+         DESC;
+      SQL
+     ).pluck(:id)
+    order = ids.map.with_index {|id, i| "WHEN #{id} THEN #{i}"}.join(' ')
+    order = "CASE ID #{order} END"
+    Dog.where(id: ids).order(order)
   end
 end
