@@ -1,3 +1,8 @@
-<%= render partial: 'thumbnail', collection: @dogs, as: :dog %>
+<% @dogs.each_with_index do |dog, i| %>
+  <%= render partial: 'thumbnail', locals: { dog: dog } %>
+  <% if ((i+1)%2).zero? %>
+    <%= image_tag 'ad.jpg' %>
+  <% end %>
+<% end %>
 
 <%= paginate @dogs %>
